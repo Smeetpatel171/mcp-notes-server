@@ -1,0 +1,14 @@
+2025-06-11 00:55:27,401 - __main__ - INFO - Starting MCP Notes Server...
+2025-06-11 00:55:27,402 - __main__ - INFO - Initial notes count: 7
+2025-06-11 00:55:27,402 - __main__ - INFO - Setting up stdio server...
+2025-06-11 00:55:27,406 - __main__ - INFO - MCP Notes Server started successfully!
+2025-06-11 00:55:27,406 - __main__ - INFO - Server is ready to handle requests
+2025-06-11 00:55:46,347 - __main__ - INFO - MCP Notes Server shutting down
+2025-06-11 00:55:46,347 - __main__ - INFO - Server stopped by user
+2025-06-11 00:56:44,138 - __main__ - INFO - Starting MCP Notes Server...
+2025-06-11 00:56:44,139 - __main__ - INFO - Initial notes count: 7
+2025-06-11 00:56:44,139 - __main__ - INFO - Setting up stdio server...
+2025-06-11 00:56:44,143 - __main__ - INFO - MCP Notes Server started successfully!
+2025-06-11 00:56:44,143 - __main__ - INFO - Server is ready to handle requests
+2025-06-11 01:04:08,216 - __main__ - INFO - MCP Notes Server shutting down
+2025-06-11 01:04:08,216 - __main__ - INFO - Server stopped by user

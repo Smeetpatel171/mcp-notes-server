@@ -6,6 +6,8 @@ Provides basic note storage and retrieval functionality
 
 import asyncio
 import json
+import logging
+import sys
 from typing import Dict, List, Any
 from mcp.server.models import InitializationOptions
 from mcp.server import NotificationOptions, Server
@@ -18,6 +20,17 @@ from mcp.types import (
     LoggingLevel
 )
 import mcp.types as types
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('mcp_notes_server.log'),
+        logging.StreamHandler(sys.stderr)  # Use stderr to avoid interfering with stdio
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # In-memory storage for notes with some sample data
 notes_storage: Dict[str, str] = {
@@ -61,6 +74,7 @@ server = Server("notes-server")
 @server.list_resources()
 async def handle_list_resources() -> List[types.Resource]:
     """List all available note resources"""
+    logger.info("Handling list_resources request")
     resources = []
     for note_id in notes_storage.keys():
         resources.append(
@@ -71,24 +85,30 @@ async def handle_list_resources() -> List[types.Resource]:
                 mimeType="text/plain"
             )
         )
+    logger.info(f"Returning {len(resources)} resources")
     return resources
 
 @server.read_resource()
 async def handle_read_resource(uri: str) -> str:
     """Read a specific note resource"""
+    logger.info(f"Handling read_resource request for URI: {uri}")
     if not uri.startswith("note://"):
+        logger.error(f"Unsupported URI scheme: {uri}")
         raise ValueError(f"Unsupported URI scheme: {uri}")
     
     note_id = uri[7:]  # Remove "note://" prefix
     if note_id not in notes_storage:
+        logger.error(f"Note not found: {note_id}")
         raise ValueError(f"Note not found: {note_id}")
     
+    logger.info(f"Successfully retrieved note: {note_id}")
     return notes_storage[note_id]
 
 @server.list_tools()
 async def handle_list_tools() -> List[types.Tool]:
     """List available tools"""
-    return [
+    logger.info("Handling list_tools request")
+    tools = [
         types.Tool(
             name="create_note",
             description="Create a new note with an ID and content",
@@ -145,22 +165,27 @@ async def handle_list_tools() -> List[types.Tool]:
             }
         )
     ]
+    logger.info(f"Returning {len(tools)} tools")
+    return tools
 
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[types.TextContent]:
     """Handle tool calls"""
+    logger.info(f"Handling call_tool request: {name} with arguments: {arguments}")
     
     if name == "create_note":
         note_id = arguments.get("note_id")
         content = arguments.get("content")
         
         if not note_id or not content:
+            logger.error("Missing required arguments for create_note")
             return [types.TextContent(
                 type="text",
                 text="Error: Both note_id and content are required"
             )]
         
         notes_storage[note_id] = content
+        logger.info(f"Successfully created note: {note_id}")
         return [types.TextContent(
             type="text",
             text=f"Note '{note_id}' created successfully"
@@ -170,23 +195,27 @@ async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[types.T
         note_id = arguments.get("note_id")
         
         if not note_id:
+            logger.error("Missing note_id for get_note")
             return [types.TextContent(
                 type="text",
                 text="Error: note_id is required"
             )]
         
         if note_id not in notes_storage:
+            logger.error(f"Note not found: {note_id}")
             return [types.TextContent(
                 type="text",
                 text=f"Error: Note '{note_id}' not found"
             )]
         
+        logger.info(f"Successfully retrieved note: {note_id}")
         return [types.TextContent(
             type="text",
             text=f"Note '{note_id}':\n{notes_storage[note_id]}"
         )]
     
     elif name == "list_notes":
+        logger.info("Listing all notes")
         if not notes_storage:
             return [types.TextContent(
                 type="text",
@@ -203,46 +232,69 @@ async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[types.T
         note_id = arguments.get("note_id")
         
         if not note_id:
+            logger.error("Missing note_id for delete_note")
             return [types.TextContent(
                 type="text",
                 text="Error: note_id is required"
             )]
         
         if note_id not in notes_storage:
+            logger.error(f"Note not found for deletion: {note_id}")
             return [types.TextContent(
                 type="text",
                 text=f"Error: Note '{note_id}' not found"
             )]
         
         del notes_storage[note_id]
+        logger.info(f"Successfully deleted note: {note_id}")
         return [types.TextContent(
             type="text",
             text=f"Note '{note_id}' deleted successfully"
         )]
     
     else:
+        logger.error(f"Unknown tool called: {name}")
         return [types.TextContent(
             type="text",
             text=f"Error: Unknown tool '{name}'"
         )]
 
 async def main():
-    # Import here to avoid issues if mcp package is not available
-    from mcp.server.stdio import stdio_server
+    logger.info("Starting MCP Notes Server...")
+    logger.info(f"Initial notes count: {len(notes_storage)}")
     
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            InitializationOptions(
-                server_name="notes-server",
-                server_version="0.1.0",
-                capabilities=server.get_capabilities(
-                    notification_options=NotificationOptions(),
-                    experimental_capabilities={}
+    try:
+        # Import here to avoid issues if mcp package is not available
+        from mcp.server.stdio import stdio_server
+        
+        logger.info("Setting up stdio server...")
+        async with stdio_server() as (read_stream, write_stream):
+            logger.info("MCP Notes Server started successfully!")
+            logger.info("Server is ready to handle requests")
+            
+            await server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="notes-server",
+                    server_version="0.1.0",
+                    capabilities=server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={}
+                    )
                 )
             )
-        )
+    except Exception as e:
+        logger.error(f"Error starting server: {e}")
+        raise
+    finally:
+        logger.info("MCP Notes Server shutting down")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user")
+    except Exception as e:
+        logger.error(f"Fatal error: {e}")
+        sys.exit(1)
