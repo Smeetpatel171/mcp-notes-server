@@ -19,8 +19,41 @@ from mcp.types import (
 )
 import mcp.types as types
 
-# In-memory storage for notes
-notes_storage: Dict[str, str] = {}
+# In-memory storage for notes with some sample data
+notes_storage: Dict[str, str] = {
+    "welcome": "Welcome to the MCP Notes Server! This is your first note.",
+    "meeting-notes": """Team Meeting - June 10, 2025
+- Discussed Q2 goals
+- New project timeline: 3 months
+- Budget approved: $50,000
+- Next meeting: June 17th""",
+    "todo-list": """Daily Tasks:
+1. Review MCP server implementation
+2. Test Claude Desktop integration
+3. Add error handling
+4. Write documentation
+5. Deploy to production""",
+    "project-ideas": """Future Project Ideas:
+- Database integration MCP server
+- File system browser MCP server
+- API client MCP server
+- Calendar integration
+- Task management system""",
+    "code-snippets": """Useful Code Snippets:
+- Python async/await patterns
+- JSON-RPC implementation
+- Error handling best practices
+- Testing strategies""",
+    "research-notes": """MCP Research Notes:
+- Model Context Protocol enables AI to access external data
+- Secure communication through stdio
+- Resource and tool-based architecture
+- Growing ecosystem of MCP servers""",
+    "personal-journal": """Personal Development Log:
+Today I learned about MCP servers and how they bridge AI with real-world data.
+The architecture is elegant - resources for data, tools for actions.
+Looking forward to building more complex integrations."""
+}
 
 # Create server instance
 server = Server("notes-server")
