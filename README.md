@@ -21,3 +21,20 @@ A simple Model Context Protocol (MCP) server for managing text notes.
 ### Running the Server
 ```bash
 python src/notes_server.py
+
+#### Running the Server
+macOS
+~/Library/Application Support/Claude/claude_desktop_config.json
+
+
+{
+  "mcpServers": {
+    "notes": {
+      "command": "python",
+      "args": ["D:\\personal-learning\\mcp-server\\src\\notes_server.py"],
+      "env": {
+        "PYTHONPATH": "D:\\personal-learning\\mcp-server\\venv\\Scripts"
+      }
+    }
+  }
+}
